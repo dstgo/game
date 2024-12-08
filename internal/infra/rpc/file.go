@@ -1,22 +1,31 @@
 package rpc
 
 import (
-	"github.com/limes-cloud/kratosx"
-	file "github.com/limes-cloud/resource/api/resource/file/v1"
+	"sync"
 
-	"partyaffairs/api/partyaffairs/errors"
-	"partyaffairs/internal/domain/entity"
+	"github.com/dstgo/kratosx"
+	file "github.com/dstgo/resource/api/resource/file/v1"
+
+	"github.com/dstgo/game/api/game/errors"
 )
 
 const (
 	Resource = "Resource"
 )
 
+var (
+	fileIns  *File
+	fileOnce sync.Once
+)
+
 type File struct {
 }
 
 func NewFile() *File {
-	return &File{}
+	fileOnce.Do(func() {
+		fileIns = &File{}
+	})
+	return fileIns
 }
 
 func (i File) client(ctx kratosx.Context) (file.FileClient, error) {
@@ -39,21 +48,4 @@ func (i File) GetFileURL(ctx kratosx.Context, sha string) string {
 		return ""
 	}
 	return reply.Url
-}
-
-func (i File) GetFile(ctx kratosx.Context, sha string) (*entity.File, error) {
-	client, err := i.client(ctx)
-	if err != nil {
-		return nil, err
-	}
-	reply, err := client.GetFile(ctx, &file.GetFileRequest{Sha: &sha})
-	if err != nil {
-		return nil, err
-	}
-	return &entity.File{
-		Name: reply.Name,
-		Type: reply.Type,
-		Size: reply.Size,
-		URL:  reply.Url,
-	}, nil
 }

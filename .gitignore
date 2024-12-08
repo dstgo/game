@@ -26,6 +26,7 @@ go.work
 Thumbs.db
 .DS_Store
 
+
 # project
 *.cert
 *.key
@@ -36,3 +37,11 @@ bin/
 .vscode/
 .idea/
 *.swp
+*/.idea/
+*/.idea/*
+
+node_modules
+uni_modules
+tmp
+autocode
+web_ts

@@ -1,26 +1,36 @@
+
+env: TEST
 server:
   http:
-    addr: 0.0.0.0:7100
-    timeout: 1s
+    host: 127.0.0.1
+    port: 7030
+    timeout: 10s
     marshal:
       emitUnpopulated: true
       useProtoNames: true
   grpc:
-    addr: 0.0.0.0:8100
-    timeout: 1s
+    host: 127.0.0.1
+    port: 8030
+    timeout: 10s
+client:
+  - server: Resource
+    type: direct
+    backends:
+      - target: 127.0.0.1:8020
 log:
-  level: 0 #日志输出等级
+  level: 0
+  caller: true
   output:
-    - stdout # stdout:控制台输出，k8s日志收集
-    - file # file:输出到文件
-  file: #output存在file时此配置才可生效
-    name: ./tmp/runtime/output.log #日志存放地址
-    maxSize: 1 #日志文件最大容量,单位m
-    maxBackup: 5 #日志文件最多保存个数
-    maxAge: 1 #保留就文件的最大天数,单位天
-    compress: false #是否进行压缩归档
+    - stdout
+    - file
+  file:
+    name: ./tmp/runtime/output.log
+    maxSize: 1
+    maxBackup: 5
+    maxAge: 1
+    compress: false
 database:
-  system: #数据库实例名称,如有多个数据库可新增
+  system:
     enable: true #是否启用数据库
     drive: mysql #数据库类型
     autoCreate: true #是否自动创建数据库
@@ -29,43 +39,101 @@ database:
       password: root
       host: 127.0.0.1
       port: 3306
-      dbName: business
+      dbName: usercenter
       option: ?charset=utf8mb4&parseTime=True&loc=Local
     config:
       transformError:
         enable: true
+      initializer:
+        enable: true
+        path: deploy/data.sql
       maxLifetime: 2h #最大生存时间
-      maxOpenConn: 10 #最大连接数量
+      maxOpenConn: 20 #最大连接数量
       maxIdleConn: 10 #最大空闲数量
       logLevel: 4 #日志等级
       slowThreshold: 2s #慢sql阈值
 redis:
-  cache: #redis实例名称,如有多个redis可新增
-    enable: true #是否启用redis
-    host: 127.0.0.1:6379 #redis地址
-email: # 邮件发送相关配置
-  template: #邮件模板
-    captcha:  #邮件模板名称
-      subject: 账号绑定验证码发送通知 #邮件模板主题
-      path: static/template/email/default.html #邮件模板路径
-      from: lime@qq.com
-      type: "text/html" #文本内容格式
-  name: 青柠校园
-  user: 860808187@qq.com #发送者
-  host: smtp.qq.com #发送host
-  port: 25
-  password: fyudafdzqmhwbfbd # 发送host密码
+  cache:
+    enable: true
+    host: 127.0.0.1:6379
+    username:
+    password:
 captcha:
-  bind:  #验证码名称
-    type: email #验证码类型
-    length: 6 #验证码长度
-    expire: 180s #过期时间
-    redis: cache #redis名称
-    template: captcha #邮箱模板名称,仅email有效
+  loginImage:
+    type: image
+    length: 6
+    expire: 180s
+    redis: cache
+    height: 80
+    width: 200
+    skew: 0.7
+    dotCount: 80
+    refresh: true
+  bindImage:
+    type: image
+    length: 6
+    expire: 180s
+    redis: cache
+    height: 80
+    width: 200
+    skew: 0.7
+    dotCount: 80
+    refresh: true
+  registerImage:
+    type: image
+    length: 6
+    expire: 180s
+    redis: cache
+    height: 80
+    width: 200
+    skew: 0.7
+    dotCount: 80
+    refresh: true
+  loginEmail:
+    type: email
+    length: 6
+    expire: 180s
+    redis: cache
+    template: login
+  bindEmail:
+    type: email
+    length: 6
+    expire: 180s
+    redis: cache
+    template: bind
+  registerEmail:
+    type: email
+    length: 6
+    expire: 180s
+    redis: cache
+    template: register
+loader:
+  password: static/cert/password.pem
+email:
+  template:
+    login:
+      subject: 登录验证码发送通知
+      path: static/template/email/default.html
+      type: text/html
+    bind:
+      subject: 绑定验证码发送通知
+      path: static/template/email/default.html
+      type: text/html
+    register:
+      subject: 注册验证码发送通知
+      path: static/template/email/default.html
+      type: text/html
+  user: 860808187@qq.com
+  name: 青岑云
+  host: smtp.qq.com
+  port: 25
+  password: fyudafdzqmhwbfbd
+jwt:
+  redis: cache
+  secret: limes-cloud-client-test
+  expire: 2h
+  renewal: 600s
+  whitelist: {"POST:/application/client/v1/bind/*":true,"GET:/application/client/v1/app":true,"POST:/application/client/v1/auth":true,"POST:/application/client/v1/token/refresh":true,"POST:/application/client/v1/login/*":true,"POST:/application/client/v1/logout":true,"POST:/application/client/v1/register/*":true,"POST:/application/client/v1/auth/captcha":true,"*:/application/api/*":true}
 business:
-  service:
-    resource: 127.0.0.1:8003
-  auth:
-    yiBan:
-      appId: e4750b34230b48e1
-      appSecret: b0891a7f6018e5a76b085e3cb9548edd
+  defaultPasswordExpire: 10s
+  defaultNickName: 用户-

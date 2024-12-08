@@ -1,12 +1,8 @@
 package conf
 
-type AuthInfo struct {
-	AppId     string
-	AppSecret string
-}
+import "time"
 
 type Config struct {
-	Auth struct {
-		YiBan AuthInfo
-	}
+	DefaultNickName       string
+	DefaultPasswordExpire time.Duration
 }
